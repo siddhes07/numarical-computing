@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include <iostream>
 using namespace std;
 
 class Matrix {
@@ -13,8 +14,16 @@ protected:
 
 public:
     Matrix(int size);
+
     void readMatrix(const string& filename);
     void readVector(const string& filename);
+    void print() const;
+
+    Matrix add(const Matrix& other) const;
+    Matrix subtract(const Matrix& other) const;
+    Matrix multiply(const Matrix& other) const;
+    Matrix divide(const Matrix& other) const;
+    Matrix inverse() const;
 };
 
 #endif

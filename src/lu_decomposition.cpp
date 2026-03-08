@@ -16,7 +16,7 @@ void LUDecomposition::solve(string outputFile)
                 sum += L[i][j] * U[j][k];
 
             U[i][k] = A[i][k] - sum;
-        }
+        }// dolittel formula U[i][k] = A[i][k] − Σ(L[i][j] × U[j][k])
 
         for(int k=i;k<n;k++){
             if(i == k)
