@@ -1,29 +1,45 @@
 #ifndef MATRIX_HPP
 #define MATRIX_HPP
-
-#include <vector>
-#include <string>
 #include <iostream>
+#include <vector>
+#include <fstream>
 using namespace std;
 
 class Matrix {
 protected:
-    int n;
-    vector<vector<double>> A;
-    vector<double> b;
-
+    int rows, cols;
+    vector<vector<double>> data;
 public:
-    Matrix(int size);
+    Matrix();
+    Matrix(int rows, int cols);
+    Matrix(const Matrix &m);
 
-    void readMatrix(const string& filename);
-    void readVector(const string& filename);
-    void print() const;
+    void readFromFile(ifstream &fin);
+    void displayToFile(ofstream &fout) const;
 
-    Matrix add(const Matrix& other) const;
-    Matrix subtract(const Matrix& other) const;
-    Matrix multiply(const Matrix& other) const;
-    Matrix divide(const Matrix& other) const;
+    Matrix operator+(const Matrix &m) const;
+    Matrix operator-(const Matrix &m) const;
+    Matrix operator*(const Matrix &m) const;
+
+    double &operator()(int i, int j);
+    double operator()(int i, int j) const;
+
+    bool operator==(const Matrix &m) const;
+
+    friend istream &operator>>(istream &in, Matrix &m);
+    friend ostream &operator<<(ostream &out, const Matrix &m);
+
+    bool isSquare() const;
+    bool isSymmetric() const;
+    bool isIdentity() const;
+    bool isNull() const;
+    bool isDiagonal() const;
+    bool isDiagonallyDominant() const;
+    bool isTranspose(const Matrix &m) const;
+    
+    void makeDiagonallyDominant();
+    Matrix transpose() const;
+    double determinant() const;
     Matrix inverse() const;
 };
-
 #endif

@@ -1,53 +1,128 @@
-#include "../include/lu_decomposition.hpp"
+#include "lu_decomposition.hpp"
+#include <fstream>
+#include <stdexcept>
+#include <cmath>
+using namespace std;
 
-LUDecomposition::LUDecomposition(int size)
-    : SystemOfLinearEquation(size) {}
+// Inheritance - SystemOfLinearEquation constructor call
+LUDecomposition::LUDecomposition(int size) : SystemOfLinearEquation(size),
+    L(size, vector<double>(size, 0)),
+    U(size, vector<double>(size, 0)) {}
 
-void LUDecomposition::solve(string outputFile)
-{
-    vector<vector<double>> L(n, vector<double>(n,0));
-    vector<vector<double>> U(n, vector<double>(n,0));
+// Encapsulation - helper functions private
+vector<double> LUDecomposition::forwardSubstitution(vector<vector<double>> &mat, vector<double> &rhs) {
+    int n = rhs.size();
+    vector<double> y(n, 0);
+    for (int i = 0; i < n; i++) {
+        y[i] = rhs[i];
+        for (int j = 0; j < i; j++) y[i] -= mat[i][j] * y[j];
+        y[i] /= mat[i][i];
+    }
+    return y;
+}
 
-    for(int i=0;i<n;i++){
+vector<double> LUDecomposition::backSubstitution(vector<vector<double>> &mat, vector<double> &rhs) {
+    int n = rhs.size();
+    vector<double> x(n, 0);
+    for (int i = n-1; i >= 0; i--) {
+        x[i] = rhs[i];
+        for (int j = i+1; j < n; j++) x[i] -= mat[i][j] * x[j];
+        x[i] /= mat[i][i];
+    }
+    return x;
+}
 
-        for(int k=i;k<n;k++){
-            double sum = 0;
-            for(int j=0;j<i;j++)
-                sum += L[i][j] * U[j][k];
+void LUDecomposition::writeMatrices(ofstream &fout, string method) {
+    int n = rows;
+    fout << "=== " << method << " ===\nL Matrix:\n";
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) fout << L[i][j] << " ";
+        fout << "\n";
+    }
+    fout << "U Matrix:\n";
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) fout << U[i][j] << " ";
+        fout << "\n";
+    }
+    fout << "===================\n\n";
+}
 
-            U[i][k] = A[i][k] - sum;
-        }// dolittel formula U[i][k] = A[i][k] − Σ(L[i][j] × U[j][k])
+// --- Doolittle (L diagonal = 1) ---
+void LUDecomposition::doolittle(string outputFile) {
+    int n = rows;
+    L.assign(n, vector<double>(n, 0));
+    U.assign(n, vector<double>(n, 0));
+    for (int i = 0; i < n; i++) L[i][i] = 1;
 
-        for(int k=i;k<n;k++){
-            if(i == k)
-                L[i][i] = 1;
-            else{
-                double sum = 0;
-                for(int j=0;j<i;j++)
-                    sum += L[k][j] * U[j][i];
-
-                L[k][i] = (A[k][i] - sum) / U[i][i];
-            }
+    for (int i = 0; i < n; i++) {
+        for (int j = i; j < n; j++) {
+            U[i][j] = data[i][j];
+            for (int k = 0; k < i; k++) U[i][j] -= L[i][k] * U[k][j];
+        }
+        for (int j = i+1; j < n; j++) {
+            L[j][i] = data[j][i];
+            for (int k = 0; k < i; k++) L[j][i] -= L[j][k] * U[k][i];
+            if (abs(U[i][i]) < 1e-10) throw runtime_error("Singular matrix!");
+            L[j][i] /= U[i][i];
         }
     }
-
-    vector<double> y(n);
-
-    for(int i=0;i<n;i++){
-        y[i] = b[i];
-        for(int j=0;j<i;j++)
-            y[i] -= L[i][j] * y[j];
-    }
-
-    vector<double> x(n);
-
-    for(int i=n-1;i>=0;i--){
-        x[i] = y[i];
-        for(int j=i+1;j<n;j++)
-            x[i] -= U[i][j] * x[j];
-
-        x[i] /= U[i][i];
-    }
-
-    writeSolution(outputFile, x);
+    ofstream fout(outputFile, ios::app);
+    writeMatrices(fout, "Doolittle"); fout.close();
+    auto y = forwardSubstitution(L, b);
+    writeSolution(outputFile, backSubstitution(U, y));
 }
+
+// --- Crout (U diagonal = 1) ---
+void LUDecomposition::crout(string outputFile) {
+    int n = rows;
+    L.assign(n, vector<double>(n, 0));
+    U.assign(n, vector<double>(n, 0));
+    for (int i = 0; i < n; i++) U[i][i] = 1;
+
+    for (int i = 0; i < n; i++) {
+        for (int j = i; j < n; j++) {
+            L[j][i] = data[j][i];
+            for (int k = 0; k < i; k++) L[j][i] -= L[j][k] * U[k][i];
+        }
+        for (int j = i+1; j < n; j++) {
+            U[i][j] = data[i][j];
+            for (int k = 0; k < i; k++) U[i][j] -= L[i][k] * U[k][j];
+            if (abs(L[i][i]) < 1e-10) throw runtime_error("Singular matrix!");
+            U[i][j] /= L[i][i];
+        }
+    }
+    ofstream fout(outputFile, ios::app);
+    writeMatrices(fout, "Crout"); fout.close();
+    auto y = forwardSubstitution(L, b);
+    writeSolution(outputFile, backSubstitution(U, y));
+}
+
+// --- Cholesky (A = L * L^T, Symmetric Positive Definite) ---
+void LUDecomposition::cholesky(string outputFile) {
+    int n = rows;
+    L.assign(n, vector<double>(n, 0));
+    U.assign(n, vector<double>(n, 0));
+    if (!isSymmetric()) throw runtime_error("Cholesky: Matrix must be symmetric!");
+
+    for (int i = 0; i < n; i++) {
+        double sum = data[i][i];
+        for (int k = 0; k < i; k++) sum -= L[i][k] * L[i][k];
+        if (sum <= 0) throw runtime_error("Cholesky: Not positive definite!");
+        L[i][i] = sqrt(sum);
+        for (int j = i+1; j < n; j++) {
+            double s = data[j][i];
+            for (int k = 0; k < i; k++) s -= L[j][k] * L[i][k];
+            L[j][i] = s / L[i][i];
+        }
+    }
+    for (int i = 0; i < n; i++)
+        for (int j = 0; j < n; j++) U[i][j] = L[j][i]; // U = L^T
+
+    ofstream fout(outputFile, ios::app);
+    writeMatrices(fout, "Cholesky"); fout.close();
+    auto y = forwardSubstitution(L, b);
+    writeSolution(outputFile, backSubstitution(U, y));
+}
+
+// Polymorphism - default solve = Doolittle
+void LUDecomposition::solve(string outputFile) { doolittle(outputFile); }

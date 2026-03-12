@@ -1,0 +1,10 @@
+=== Matrix Properties ===
+Is Square             : Yes
+Is Symmetric          : No
+Is Identity           : No
+Is Null               : No
+Is Diagonal           : No
+Is Diagonally Dominant: No
+Determinant           : -3.42032e+98
+=========================
+

@@ -1,46 +1,27 @@
-#include "../include/system_of_linear_equation.hpp"
+#include "system_of_linear_equation.hpp"
 #include <fstream>
-#include <iostream>
-
+#include <stdexcept>
 using namespace std;
 
-// Constructor
-SystemOfLinearEquation::SystemOfLinearEquation(int size)
-    : Matrix(size) {}
-
-// Read RHS vector b
-void SystemOfLinearEquation::readVector(string filename){
-    ifstream file(filename);
-
-    if(!file){
-        cout << "Vector file not found!" << endl;
-        return;
-    }
-
-    b.resize(n);
-
-    for(int i = 0; i < n; i++)
-        file >> b[i];
-
-    file.close();
+// Inheritance - Matrix constructor call
+SystemOfLinearEquation::SystemOfLinearEquation(int size) : Matrix(size, size) {
+    b.resize(size, 0);
 }
 
-// Getter
-vector<double> SystemOfLinearEquation::getVector(){
-    return b;
+// Encapsulation - file read/write logic class मध्ये hide
+void SystemOfLinearEquation::readVector(string filename) {
+    ifstream fin(filename);
+    if (!fin) throw runtime_error("Cannot open: " + filename);
+    for (auto &val : b) fin >> val;
 }
 
-// Write final solution to file
-void SystemOfLinearEquation::writeSolution(string filename, vector<double> x){
-    ofstream file(filename);
+vector<double> SystemOfLinearEquation::getVector() { return b; }
 
-    if(!file){
-        cout << "Cannot create output file!" << endl;
-        return;
-    }
-
-    for(int i = 0; i < x.size(); i++)
-        file << "x" << i+1 << " = " << x[i] << endl;
-
-    file.close();
+void SystemOfLinearEquation::writeSolution(string filename, vector<double> sol) {
+    ofstream fout(filename, ios::app);
+    if (!fout) throw runtime_error("Cannot open: " + filename);
+    fout << "=== Solution ===\n";
+    for (int i = 0; i < (int)sol.size(); i++)
+        fout << "x" << i+1 << " = " << sol[i] << "\n";
+    fout << "================\n\n";
 }
