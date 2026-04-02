@@ -13,8 +13,7 @@ public:
     Matrix();
     Matrix(int rows, int cols);
     Matrix(const Matrix &m);
-      
-
+  bool isSymmetric(); 
     void readFromFile(ifstream &fin);
     void displayToFile(ofstream &fout) const;
 
@@ -31,11 +30,12 @@ public:
     friend ostream &operator<<(ostream &out, const Matrix &m);
 
     bool isSquare() const;
-bool isSymmetric() const;
-bool isIdentity() const;
-bool isNull() const;
-bool isDiagonal() const;
-bool isDiagonallyDominant() const;
+    bool isSymmetric() const;
+    bool isIdentity() const;
+    bool isNull() const;
+    bool isDiagonal() const;
+    bool isDiagonallyDominant() const;
+    bool isTranspose(const Matrix &m) const;
     
     void makeDiagonallyDominant();
     Matrix transpose() const;

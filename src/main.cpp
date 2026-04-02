@@ -1,89 +1,134 @@
 #include <iostream>
 #include <fstream>
-#include "matrix.hpp"
+#include <string>
 #include "gaussian_elimination.hpp"
 #include "lu_decomposition.hpp"
+#include "gauss_jacobi.hpp"
+#include "gauss_seidel.hpp"
 using namespace std;
 
-const string MAT = "input/1.txt";
-const string VEC = "input/2.txt";
-const string OUT = "output/";
+const string MATRIX_FILE = "input/matrix.txt";
+const string VECTOR_FILE = "input/vector.txt";
+const string OUTPUT_FILE = "output/iterative_output.txt";
 
-void printProperties(Matrix &A, string outFile) {
-    ofstream fout(outFile, ios::app);
-    fout << "=== Matrix Properties ===\n"
-         << "Is Square             : " << (A.isSquare()             ? "Yes" : "No") << "\n"
-         << "Is Symmetric          : " << (A.isSymmetric()          ? "Yes" : "No") << "\n"
-         << "Is Identity           : " << (A.isIdentity()           ? "Yes" : "No") << "\n"
-         << "Is Null               : " << (A.isNull()               ? "Yes" : "No") << "\n"
-         << "Is Diagonal           : " << (A.isDiagonal()           ? "Yes" : "No") << "\n"
-         << "Is Diagonally Dominant: " << (A.isDiagonallyDominant() ? "Yes" : "No") << "\n"
-         << "Determinant           : " << A.determinant()            << "\n"
-         << "=========================\n\n";
+int readMatrixSize() {
+    ifstream fin(MATRIX_FILE);
+    if (!fin) { cerr << "Error: Cannot open " << MATRIX_FILE << endl; exit(1); }
+    int n; fin >> n; fin.close();
+    return n;
 }
 
-void runSolver(int choice, int size, Matrix &A, string outFile) {
-    ofstream clear(outFile); clear.close();
-    printProperties(A, outFile);
+void initOutputFile(int n) {
+    ofstream fout(OUTPUT_FILE);
+    fout << "========================================\n";
+    fout << "  Numerical Computing - Method Output\n";
+    fout << "  Matrix Size : " << n << " x " << n << "\n";
+    fout << "========================================\n\n";
+    fout.close();
+}
 
-    if (choice == 1) {
-        GaussianElimination gauss(size);
-        ifstream f(MAT); int r, c; f >> r >> c; // skip size line
-        gauss.readFromFile(f); f.close();
-        gauss.readVector(VEC);
-        gauss.solve(outFile);
-    } else {
-        LUDecomposition lu(size);
-        ifstream f(MAT); int r, c; f >> r >> c; // skip size line
-        lu.readFromFile(f); f.close();
-        lu.readVector(VEC);
-        if      (choice == 2) lu.doolittle(outFile);
-        else if (choice == 3) lu.crout(outFile);
-        else if (choice == 4) lu.cholesky(outFile);
-    }
-    cout << "Done! -> " << outFile << "\n";
+void runGaussJacobi(int n) {
+    cout << "\nRunning Gauss Jacobi...\n";
+    try {
+        GaussJacobi gj(n);
+        ifstream fin(MATRIX_FILE); gj.readFromFile(fin); fin.close();
+        gj.readVector(VECTOR_FILE);
+        gj.solve(OUTPUT_FILE);
+        cout << "Done! Output saved to: " << OUTPUT_FILE << "\n";
+    } catch (exception &e) { cerr << "Error: " << e.what() << endl; }
+}
+
+void runGaussSeidel(int n) {
+    cout << "\nRunning Gauss Seidel...\n";
+    try {
+        GaussSeidel gs(n);
+        ifstream fin(MATRIX_FILE); gs.readFromFile(fin); fin.close();
+        gs.readVector(VECTOR_FILE);
+        gs.solve(OUTPUT_FILE);
+        cout << "Done! Output saved to: " << OUTPUT_FILE << "\n";
+    } catch (exception &e) { cerr << "Error: " << e.what() << endl; }
+}
+
+void runGaussianElimination(int n) {
+    cout << "\nRunning Gaussian Elimination...\n";
+    try {
+        GaussianElimination ge(n);
+        ifstream fin(MATRIX_FILE); ge.readFromFile(fin); fin.close();
+        ge.readVector(VECTOR_FILE);
+        ge.solve(OUTPUT_FILE);
+        cout << "Done! Output saved to: " << OUTPUT_FILE << "\n";
+    } catch (exception &e) { cerr << "Error: " << e.what() << endl; }
+}
+
+void runLUDecomposition(int n) {
+    cout << "\n--- LU Decomposition Sub-Menu ---\n";
+    cout << "  1. Doolittle\n";
+    cout << "  2. Crout\n";
+    cout << "  3. Cholesky\n";
+    cout << "  4. All LU Methods\n";
+    cout << "Enter choice: ";
+    int luChoice; cin >> luChoice;
+    try {
+        LUDecomposition lu(n);
+        ifstream fin(MATRIX_FILE); lu.readFromFile(fin); fin.close();
+        lu.readVector(VECTOR_FILE);
+        if (luChoice == 1) { lu.doolittle(OUTPUT_FILE); cout << "Doolittle Done!\n"; }
+        else if (luChoice == 2) { lu.crout(OUTPUT_FILE); cout << "Crout Done!\n"; }
+        else if (luChoice == 3) { lu.cholesky(OUTPUT_FILE); cout << "Cholesky Done!\n"; }
+        else if (luChoice == 4) {
+            lu.doolittle(OUTPUT_FILE); cout << "Doolittle Done!\n";
+            lu.crout(OUTPUT_FILE); cout << "Crout Done!\n";
+            lu.cholesky(OUTPUT_FILE); cout << "Cholesky Done!\n";
+        } else { cout << "Invalid choice!\n"; }
+        cout << "Output saved to: " << OUTPUT_FILE << "\n";
+    } catch (exception &e) { cerr << "Error: " << e.what() << endl; }
+}
+
+void runAllMethods(int n) {
+    cout << "\nRunning All Methods...\n";
+    cout << "-----------------------------\n";
+    runGaussJacobi(n);
+    runGaussSeidel(n);
+    runGaussianElimination(n);
+    try {
+        LUDecomposition lu(n);
+        ifstream fin(MATRIX_FILE); lu.readFromFile(fin); fin.close();
+        lu.readVector(VECTOR_FILE);
+        lu.doolittle(OUTPUT_FILE); cout << "LU Doolittle Done!\n";
+        lu.crout(OUTPUT_FILE); cout << "LU Crout Done!\n";
+    } catch (exception &e) { cerr << "LU Error: " << e.what() << endl; }
+    cout << "\n========================================\n";
+    cout << "All Methods Done!\n";
+    cout << "Output saved to: " << OUTPUT_FILE << "\n";
+    cout << "========================================\n";
 }
 
 int main() {
-    int choice;
-
-    // Size file मधूनच read करतो
-    ifstream fin(MAT);
-    if (!fin) { cerr << "Cannot open: " << MAT << "\n"; return 1; }
-    int rows, cols;
-    fin >> rows >> cols;  // पहिली line - 49 50 read करतो
-    int size = rows;      // square matrix साठी rows वापरतो
-    
-    // Matrix read करतो
-    Matrix A(size, size);
-    A.readFromFile(fin);
-    fin.close();
-
-    cout << "=== Linear Equation Solver ===\n"
-         << "Matrix: " << MAT << " (" << size << "x" << size << ")\n"
-         << "Vector: " << VEC << "\n\n"
-         << "1. Gaussian Elimination\n"
-         << "2. LU Doolittle\n"
-         << "3. LU Crout\n"
-         << "4. LU Cholesky\n"
-         << "5. All Methods\n"
-         << "Enter choice: ";
-    cin >> choice;
-
-    if (choice >= 1 && choice <= 4) {
-        string files[] = {"", OUT+"gaussian_output.txt", OUT+"lu_doolittle_output.txt",
-                              OUT+"lu_crout_output.txt", OUT+"lu_cholesky_output.txt"};
-        runSolver(choice, size, A, files[choice]);
-    } else if (choice == 5) {
-        runSolver(1, size, A, OUT+"gaussian_output.txt");
-        runSolver(2, size, A, OUT+"lu_doolittle_output.txt");
-        runSolver(3, size, A, OUT+"lu_crout_output.txt");
-        runSolver(4, size, A, OUT+"lu_cholesky_output.txt");
-        cout << "All methods done!\n";
-    } else {
-        cout << "Invalid choice!\n";
-        return 1;
+    int n = readMatrixSize();
+    while (true) {
+        cout << "\n========================================\n";
+        cout << "  Numerical Computing - Method Selector\n";
+        cout << "  Matrix Size: " << n << " x " << n << "\n";
+        cout << "========================================\n";
+        cout << "  1. Gauss Jacobi\n";
+        cout << "  2. Gauss Seidel\n";
+        cout << "  3. Gaussian Elimination\n";
+        cout << "  4. LU Decomposition\n";
+        cout << "  5. Run All Methods\n";
+        cout << "  0. Exit\n";
+        cout << "========================================\n";
+        cout << "Enter choice: ";
+        int choice; cin >> choice;
+        if (choice != 0) initOutputFile(n);
+        switch (choice) {
+            case 1: runGaussJacobi(n); break;
+            case 2: runGaussSeidel(n); break;
+            case 3: runGaussianElimination(n); break;
+            case 4: runLUDecomposition(n); break;
+            case 5: runAllMethods(n); break;
+            case 0: cout << "\nExiting... Goodbye!\n"; return 0;
+            default: cout << "Invalid choice!\n";
+        }
     }
-
     return 0;
 }
