@@ -30,12 +30,13 @@ public:
     friend istream &operator>>(istream &in, Matrix &m);
     friend ostream &operator<<(ostream &out, const Matrix &m);
 
-    bool isSquare() const;
+   bool isSquare() const;
 bool isSymmetric() const;
 bool isIdentity() const;
 bool isNull() const;
 bool isDiagonal() const;
 bool isDiagonallyDominant() const;
+bool isTranspose(const Matrix &m) const;   // ✅ ADD THIS LINE
     
     void makeDiagonallyDominant();
     Matrix transpose() const;

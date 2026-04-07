@@ -9,7 +9,7 @@ GaussSeidel::GaussSeidel(int size, int maxIter, double tol)
     : SystemOfLinearEquation(size), maxIterations(maxIter), tolerance(tol) {}
 
 void GaussSeidel::solve(string outputFile) {
-    int n = rows;
+   int n = this->n;
     bool isDiagDom = isDiagonallyDominant();
 
     ofstream fout(outputFile, ios::app);
@@ -46,12 +46,12 @@ void GaussSeidel::solve(string outputFile) {
             double sum = b[i];
             for (int j = 0; j < n; j++) {
                 if (j != i)
-                    sum -= data[i][j] * x[j];
+                 sum -= A[i][j] * x[j];
             }
-            if (abs(data[i][i]) < 1e-12)
+            if (abs(A[i][i]) < 1e-12)
                 throw runtime_error("Zero diagonal element in Gauss Seidel!");
 
-            double xNew = sum / data[i][i];
+           double xNew = sum / A[i][i];
             error = max(error, abs(xNew - x[i]));
             x[i] = xNew; // लगेच update
         }

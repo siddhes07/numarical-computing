@@ -81,6 +81,19 @@ public:
         return true;
     }
 
+    bool isSymmetric()
+{
+    for(int i = 0; i < n; i++)
+    {
+        for(int j = 0; j < n; j++)
+        {
+            if(A[i][j] != A[j][i])
+                return false;
+        }
+    }
+    return true;
+}
+
 
     // Convert matrix into diagonally dominant form
     bool makeDiagonallyDominant()

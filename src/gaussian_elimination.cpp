@@ -23,11 +23,9 @@ void GaussianElimination::solve(string outputFile)
     // Step 1: Diagonal dominance check
     dominanceReport(fout);
 
-    int n = rows;
-
-    // Copy matrix and RHS vector
-    vector<vector<double>> A = data;
-    vector<double> rhs = b;
+   int n = this->n;
+vector<vector<double>> A = this->A;
+vector<double> rhs = this->b;
 
     // Step 2: Print Initial Matrix
     fout << "Initial Augmented Matrix:\n";

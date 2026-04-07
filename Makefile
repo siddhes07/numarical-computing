@@ -7,7 +7,8 @@ SRC = src/main.cpp \
       src/gaussian_elimination.cpp \
       src/lu_decomposition.cpp \
       src/gauss_jacobi.cpp \
-      src/gauss_seidel.cpp
+      src/gauss_seidel.cpp\
+      src/interpolation.cpp \
 
 TARGET = solver
 
