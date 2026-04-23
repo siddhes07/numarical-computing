@@ -17,15 +17,17 @@ protected:
     vector<double> y;
 
 public:
-
     // Constructor
     Interpolation(int size);
 
-    // Read interpolation data
+    // Read interpolation data from file
     void readData(string filename);
 
     // Lagrange Interpolation Method
     void lagrange(double value, string outputFile);
+
+    // NOTE: leastSquares() REMOVED from here
+    // It is now in LeastSquares class (clean OOP)
 };
 
 #endif

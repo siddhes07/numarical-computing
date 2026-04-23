@@ -5,18 +5,25 @@
 using namespace std;
 
 
-// Constructor
+// ============================================================
+//  Constructor
+//  Interpolation → Matrix
+// ============================================================
 Interpolation::Interpolation(int size)
     : Matrix(size, 2)
 {
     n = size;
-
     x.resize(n);
     y.resize(n);
 }
 
 
-// Read interpolation data from file
+// ============================================================
+//  readData
+//  File format:
+//    Line 1 : number of points
+//    Line 2+ : x y  (one pair per line)
+// ============================================================
 void Interpolation::readData(string filename)
 {
     ifstream fin(filename);
@@ -27,62 +34,61 @@ void Interpolation::readData(string filename)
         exit(1);
     }
 
+    int temp;
+    fin >> temp;   // skip number of points (already in n)
+
     for(int i = 0; i < n; i++)
-    {
         fin >> x[i] >> y[i];
-    }
 
     fin.close();
 }
 
 
-// Lagrange interpolation with full step output
+// ============================================================
+//  lagrange
+//  Formula : P(x) = Σ yi * Li(x)
+//  Li(x)   = Π (x - xj) / (xi - xj)  for j != i
+// ============================================================
 void Interpolation::lagrange(double value, string outputFile)
 {
     ofstream fout(outputFile, ios::app);
 
     fout << "========================================\n";
-    fout << "Lagrange Interpolation Method\n";
-    fout << "Formula Used: P(x) = Σ yi Li(x)\n\n";
-    fout << "Interpolation Point : " << value << "\n\n";
+    fout << "  Lagrange Interpolation Method\n";
+    fout << "  Formula : P(x) = Σ yi * Li(x)\n";
+    fout << "========================================\n\n";
+
+    fout << "  Interpolation Point : " << value << "\n\n";
 
     double result = 0;
 
-
-    // Step-by-step calculation
     for(int i = 0; i < n; i++)
     {
         double term = y[i];
 
-        fout << "L" << i << "(x) term:\n";
-        fout << "y[" << i << "] = " << y[i] << "\n";
+        fout << "  L" << i << "(x) :\n";
+        fout << "  y[" << i << "] = " << y[i] << "\n";
 
         for(int j = 0; j < n; j++)
         {
             if(i != j)
             {
-                double numerator = (value - x[j]);
-                double denominator = (x[i] - x[j]);
+                fout << "  * (" << value << " - " << x[j] << ")"
+                     << " / (" << x[i]  << " - " << x[j] << ")\n";
 
-                fout << " * (" << value << " - " << x[j] << ") / ("
-                     << x[i] << " - " << x[j] << ")";
-
-                term *= numerator / denominator;
+                term *= (value - x[j]) / (x[i] - x[j]);
             }
         }
 
-        fout << "\nTerm value = " << term << "\n\n";
-
+        fout << "  Term = " << term << "\n\n";
         result += term;
     }
 
-
     fout << "----------------------------------------\n";
-    fout << "Final Interpolated Value = " << result << "\n";
+    fout << "  Final Interpolated Value = " << result << "\n";
     fout << "========================================\n\n";
 
     fout.close();
 
-
-    cout << "Interpolation full solution saved to output file ✔\n";
+    cout << "Lagrange done! Output saved ✔\n";
 }
